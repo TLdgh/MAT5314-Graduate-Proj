@@ -1,0 +1,21 @@
+---
+title: "MAT5314 Graduate Project"
+author: 
+  - Teng Li(7373086)
+  - Shiya Gao() 
+  - Chuhan Yue(300376046)
+  - Yang Lyu(8701121)
+output: pdf_document
+header-includes: 
+  - \renewcommand{\and}{\\}
+---
+
+# Introduction
+
+# Method
+
+# Result
+
+# Discussion
+
+# Conclusion
