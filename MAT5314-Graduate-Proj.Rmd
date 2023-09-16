@@ -12,7 +12,26 @@ header-includes:
 
 # Introduction
 
+## 1)
+### what causes earthquake
+
+### why it is difficult to predict
+
+## 2)
+### how do others analyze this data? what are the methods so far
+
+## 3)
+### why do we want to analyze this data (to draw some inference? to predict? to check model legitimacy?)
+
 # Method
+
+## visualization of data
+
+## time series analysis
+
+## location analysis (cluster analysis?)
+
+## In-depth exploration of the data using longitude/lattitude/magnitude
 
 # Result
 
