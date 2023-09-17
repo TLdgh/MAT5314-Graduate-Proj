@@ -8,6 +8,8 @@ author:
 output: pdf_document
 header-includes: 
   - \renewcommand{\and}{\\}
+bibliography: References.bib
+link-citations: yes
 ---
 
 # Introduction
@@ -22,7 +24,7 @@ header-includes:
 
 ## 3)
 ### why do we want to analyze this data (to draw some inference? to predict? to check model legitimacy?)
-
+We found a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze this data to make some inference. For example, we want to check if there's any location-wise pattern in earthquake occurrence in Canada and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as time. Finally we want to apply some probabilistic models to the data to assess the likelihood of future occurrence in high-risk area.
 # Method
 
 ## visualization of data
