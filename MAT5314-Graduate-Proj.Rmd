@@ -28,13 +28,13 @@ Frequent historical earthquakes give us a huge data set that can be used to stud
 # Method
 
 ## visualization of data
-
+First, we will visualize seismic data by map charts, plots and so on. These charts can allow us to better understand seismic data and help us to select variables later.
 ## time series analysis
-
+Second, we will use time series analysis to study whether seismic events have temporal trends and seasonal patterns or not.
 ## location analysis (cluster analysis?)
-
+Third, we plan to select some geographic characteristics, such as longitude, latitude and magnitude. Then we can use these variables to find relationship between those variables and the location of earthquakes.
 ## In-depth exploration of the data using longitude/lattitude/magnitude
-
+Fourth, we will use the variable we selected in the last step to calculate the probability of earthquakes.
 # Result
 
 # Discussion
