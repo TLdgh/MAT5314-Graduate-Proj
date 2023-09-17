@@ -2,7 +2,7 @@
 title: "MAT5314 Graduate Project"
 author: 
   - Teng Li(7373086)
-  - Shiya Gao() 
+  - Shiya Gao(300381032) 
   - Chuhan Yue(300376046)
   - Yang Lyu(8701121)
 output: pdf_document
@@ -14,12 +14,14 @@ header-includes:
 
 ## 1)
 ### what causes earthquake
+Earthquakes are usually caused when the underground rock suddenly breaks and there is rapid motion along a fault. According to the causes, earthquakes can be categorized into natural earthquakes and artificial earthquakes. And natural earthquakes are mainly tectonic earthquakes and volcanic earthquakes. Tectonic earthquakes are caused by the rupture of rocks deep in the ground and the rapid release of energy accumulated over a long period of time. Volcanic earthquakes are caused by volcanic eruptions. In addition, artificial earthquakes are caused by human activities that alter the stresses and strains on Earth's crust.
 
 ### why it is difficult to predict
+Earthquakes are difficult to predict for three main reasons. Firstly, plate boundaries are prone to earthquakes, but the way and speed of plate movement is difficult to measure and predict accurately. Secondly, the low frequency of large earthquakes does not provide enough data for earthquake modeling. Thirdly, it is difficult to enter the inner crust of the earth to observe the data, so most of the detection of earthquakes is done by collecting some vibrations and signals on the surface to analyze and predict them, which leads to a decrease in the accuracy of earthquake prediction.
+
 
 ## 2)
 ### how do others analyze this data? what are the methods so far
-
 Frequent historical earthquakes give us a huge data set that can be used to study earthquake causes, correlations, space-time, and further earthquake prediction. Several statistical models can be applied to the analysis of earthquake processes. Trigger model, a special case of the Neyman-Scott clustering model, can be used to estimate aftershocks after a major earthquake (1). Epidemic-Type Aftershocks Sequence (ETAS) model is also widely used to forecast earthquake occurrences (2). People perform time series analysis to explore cycles related to earthquake frequency. Time series analysis is effective in predicting large earthquakes (3). Deep learning provides us the prediction of seismic events, including intensity and location (4). Clustering model can identify regions with high-frequency earthquakes to upgrade building structures to reduce damage from impending earthquakes.
 
 ## 3)
