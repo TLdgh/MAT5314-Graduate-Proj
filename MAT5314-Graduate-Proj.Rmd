@@ -22,6 +22,8 @@ link-citations: yes
 ## 2)
 ### how do others analyze this data? what are the methods so far
 
+Frequent historical earthquakes give us a huge data set that can be used to study earthquake causes, correlations, space-time, and further earthquake prediction. Several statistical models can be applied to the analysis of earthquake processes. Trigger model, a special case of the Neyman-Scott clustering model, can be used to estimate aftershocks after a major earthquake (1). Epidemic-Type Aftershocks Sequence (ETAS) model is also widely used to forecast earthquake occurrences (2). People perform time series analysis to explore cycles related to earthquake frequency. Time series analysis is effective in predicting large earthquakes (3). Deep learning provides us the prediction of seismic events, including intensity and location (4). Clustering model can identify regions with high-frequency earthquakes to upgrade building structures to reduce damage from impending earthquakes.
+
 ## 3)
 ### why do we want to analyze this data (to draw some inference? to predict? to check model legitimacy?)
 We found a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze this data to make some inference. For example, we want to check if there's any location-wise pattern in earthquake occurrence in Canada and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as time. Finally we want to apply some probabilistic models to the data to assess the likelihood of future occurrence in high-risk area.
