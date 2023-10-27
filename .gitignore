@@ -5,8 +5,7 @@
 
 # Session Data files
 .RData
-ab_data.csv
-mimic3d.csv
+eqarchive-en.csv
 
 # RStudio files
 .Rproj.user/
@@ -16,11 +15,8 @@ Data_Analysis_Proj_2.Rproj
 *.html
 *.log
 *.pdf
-<<<<<<< HEAD
-*.tex
-Figures/*_files/
-=======
+
 Figures/*_files/
 !Citation/*
 MAT5314-Project-2.tex
->>>>>>> 7b7d59dd9829cba79fe5da0725bb010dd3c701bd
+

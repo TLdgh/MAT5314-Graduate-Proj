@@ -1,0 +1,35 @@
+---
+title: "map"
+author: "Chuhan Yue"
+date: "2023-10-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data<-read.csv("eqarchive-en.csv")
+data$X.1 <- 1
+head(data)
+```
+
+```{r}
+library(RgoogleMaps)
+library(plotly)
+library(dplyr)
+fig <- data %>% plot_ly( 
+    lat = ~latitude,
+    lon = ~longitude,
+    marker = list(color = "fuchsia"),
+    type = 'scattermapbox') 
+fig <- fig %>%
+  layout(
+    mapbox = list(
+      style = 'open-street-map',
+      zoom =2.5,
+      center = list(lon = -88, lat = 34))) 
+
+fig
+```
