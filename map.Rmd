@@ -6,23 +6,21 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(plotly)
+library(dplyr)
 ```
 
 ```{r}
 data<-read.csv("eqarchive-en.csv")
-data$X.1 <- 1
 head(data)
 ```
 
 ```{r}
-library(RgoogleMaps)
-library(plotly)
-library(dplyr)
+
 fig <- data %>% plot_ly( 
     lat = ~latitude,
     lon = ~longitude,
-    marker = list(color = "fuchsia"),
+    marker = list(color = "fuchsia",size=3),
     type = 'scattermapbox') 
 fig <- fig %>%
   layout(
