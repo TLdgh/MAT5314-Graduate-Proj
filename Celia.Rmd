@@ -1,6 +1,6 @@
 ```{r setup, include=FALSE}
 library(plotly)
-library(dplyr)
+library(tidyverse)
 library(htmlwidgets)
 ```
 
@@ -12,7 +12,7 @@ head(data)
 Since the year 2000, there has been a noticeable trend of increasing earthquake frequency each year, and the year 2000 marked the first year when the cumulative earthquake count exceeded 2,000.
 ```{r}
 frequency <- data %>%
-  group_by(year = format(date, "%Y")) %>%
+  group_by(year = year(date)) %>%
   summarise(count = n())
 frequency$year <- as.numeric(frequency$year)
 
