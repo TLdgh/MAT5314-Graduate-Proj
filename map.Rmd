@@ -7,7 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 library(plotly)
-library(dplyr)
+library(tidyverse)
 ```
 
 ```{r}
@@ -21,7 +21,7 @@ fig <- data %>% plot_ly(
     lat = ~latitude,
     lon = ~longitude,
     marker = list(color = "fuchsia",size=3),
-    type = 'scattermapbox') 
+    type = 'scattermapbox', mode="markers") 
 fig <- fig %>%
   layout(
     mapbox = list(
