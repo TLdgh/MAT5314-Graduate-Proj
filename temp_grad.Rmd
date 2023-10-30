@@ -1,0 +1,127 @@
+---
+title: "temp_grad"
+author: "Yang Lyu"
+date: "25/10/2023"
+output: pdf_document
+---
+
+data dictionary: (https://earthquakescanada.nrcan.gc.ca/info-gen/glossa-en.php)
+
+latitude: The location of a point north or south of the equator. Latitude is shown on a map or globe as east-west lines parallel to the equator.  
+
+longitude: The location of a point east or west of the prime meridian. Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.  
+
+depth: The value given is the depth below the surface of the mean spheroid.  
+
+magnitude: Magnitude is a measure of the amount of energy released during an earthquake. It may be expressed using the Richter scale.  
+
+1. $M_{L}$ means local magnitude, which is the magnitude defined by Charles Richter for California. However, due to the different attenuation methods of seismic waves in Eastern North America, Otto Nuttli defined a magnitude formula more suitable for Eastern North America, called Magnitude Nuttli, which is $m_{N}$. There exists some other scales of magnitude, but the magnitude of the moment scale ($M_{W}$ or $M$) is the most common way to describe earthquakes. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+
+2. Negative magnitude is not an error, because magnitude calculations are based on a logarithmic scale. 10 times drop in amplitude decreases the magnitude by 1. Hence magnitude -1 is 10 time less than magnitude 0. Negative magnitude represents small earthquake which are not felt by human. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+```{r}
+eqarchive <- read.csv("eqarchive-en.csv", header = TRUE)
+# View(eqarchive)
+summary(eqarchive)
+nrow(eqarchive)
+sum(is.na(eqarchive))
+View(eqarchive)
+```
+
+```{r}
+cat("*Group by magnitude type:\n")
+table(eqarchive$magnitude.type)
+```
+
+```{r}
+library(ggplot2)
+earthquake_date <- as.POSIXct(eqarchive$date, format = "%Y-%m-%d")
+ggplot(eqarchive, aes(x = earthquake_date, y = magnitude)) +
+  geom_point() +
+  labs(x = "Date", y = "Magnitude") +
+  ggtitle("Earthquake Magnitude Over Time") +
+  theme_minimal()
+```
+
+```{r}
+library(dplyr)
+earthquake_count_by_year <- eqarchive %>%
+  group_by(year = lubridate::year(date)) %>%
+  summarise(count = n())
+
+ggplot(earthquake_count_by_year, aes(x = year, y = count)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Year", y = "Number of Earthquakes") +
+  ggtitle("Earthquake Occurrence by Year")
+```
+
+```{r}
+# Group by magnitude type
+
+df1 <- eqarchive %>%
+  filter(magnitude.type %in% c("M", "M5"))
+
+df2 <- eqarchive %>%
+  filter(magnitude.type %in% c("mb", "Mb", "MB"))
+
+df3 <- eqarchive %>%
+  filter(magnitude.type %in% c("mc", "Mc", "MC"))
+
+df4 <- eqarchive %>%
+  filter(magnitude.type %in% c("ML", "MLSn"))
+
+df5 <- eqarchive %>%
+  filter(magnitude.type == "MN")
+
+df6 <- eqarchive %>%
+  filter(magnitude.type %in% c("Ms", "MS"))
+
+df7 <- eqarchive %>%
+  filter(magnitude.type %in% c("Mw", "MW"))
+```
+
+```{r}
+# Group by seasons
+library(lubridate)
+earthquake_YMD <- eqarchive
+earthquake_YMD$date <- as.POSIXct(eqarchive$date, format = "%Y-%m-%d")
+spring  <- earthquake_YMD %>%
+  filter(month(date) %in% c(3, 4, 5))
+
+summer <- earthquake_YMD %>%
+  filter(month(date) %in% c(6, 7, 8))
+
+fall <- earthquake_YMD %>%
+  filter(month(date) %in% c(9, 10, 11))
+
+winter <- earthquake_YMD %>%
+  filter(month(date) %in% c(12, 1, 2))
+```
+
+```{r}
+nrow(spring)
+nrow(summer)
+nrow(fall)
+nrow(winter)
+```
+
+```{r}
+eqarchive$Month <- month(eqarchive$date)
+
+eqarchive$season <- case_when(
+  eqarchive$Month %in% c(3, 4, 5) ~ "Spring",
+  eqarchive$Month %in% c(6, 7, 8) ~ "Summer",
+  eqarchive$Month %in% c(9, 10, 11) ~ "Fall",
+  TRUE ~ "Winter"
+)
+```
+
+```{r}
+barplot(table(eqarchive$season))
+```
+
+```{r}
+eqarchive$magnitudeGreater5 <- ifelse(eqarchive$magnitude > 5, 1, 0)
+cate_table <- table(factor(eqarchive$season), factor(eqarchive$magnitudeGreater5))
+chi_squared_result <- chisq.test(cate_table)
+print(chi_squared_result)
+```
