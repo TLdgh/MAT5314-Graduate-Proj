@@ -31,3 +31,4 @@ fig <- fig %>%
 
 fig
 ```
+We have plotted the locations of earthquakes on the map, and it is evident that there is a substantial amount of data. Earthquakes primarily occur in regions of Canada that are in proximity to the United States and Greenland.
