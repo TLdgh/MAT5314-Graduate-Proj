@@ -13,6 +13,12 @@ fontsize: 10pt
 bibliography: References.bib
 link-citations: yes
 ---
+
+```{r, include=FALSE}
+library(tidyverse)
+library(kableExtra)
+```
+
 # Introduction
 Earthquakes are usually caused when the underground rock suddenly breaks and there is rapid motion along a fault. They can be categorized into natural earthquakes and artificial earthquakes. Natural earthquakes can be further classified into tectonic earthquakes and volcanic earthquakes. Tectonic earthquakes are caused by the rupture of rocks deep in the ground and the rapid release of energy accumulated over a long period of time. Volcanic earthquakes are caused by volcanic eruptions. In addition, artificial earthquakes are caused by human activities that alter the stresses and strains on Earth's crust. In our project we will only focus on the natural earthquake due to its probabilistic nature of occurrence.
 
@@ -24,5 +30,51 @@ We focus on a data set of earthquake occurrence in Canada provided by the Govern
 
 # Method
 First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Third, we will use geographic characteristics such as longitude, latitude and magnitude to identify potential groups of clusters. We may use different techniques of cluster analysis to achieve this goal. This will allow us to compare the predicted clusters with the actual location of earthquakes. Lastly, we will try to estimate the probability of earthquakes in high-risk regions by using the variables from the data and the Epidemic-Type Aftershocks Sequence (ETAS) model.
+
+```{r, echo=FALSE}
+eqarchive <- read.csv("eqarchive-en.csv", header = TRUE)
+```
+
+```{r, echo=FALSE}
+DataDict<-data.frame(
+  Variables=colnames(eqarchive), 
+  Example=sapply(eqarchive, function(x) paste(as.character(head(unique(x),1)), collapse = ", ")),
+  Meanings=c("The exactly time that earthquakes occur.",
+            "The location of a point north or south of the equator.Latitude is shown on a map or globe as east-west lines parallel to the equator.",
+            "The location of a point east or west of the prime meridian.Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.",
+            "The value given is the depth below the surface of the mean spheroid. It shows the point of initial rupture within Earth",
+            "Magnitude is a measure of the amount of energy released during an earthquake.",
+            "Distinct magnitude scales base on the type of the earthquakes and the differences of data collection.",
+            "The locations where earthquakes happened.",
+            "continued for place",
+            "continued for place"
+            )
+)
+```
+
+```{r, echo=FALSE}
+DataDict %>%
+  remove_rownames() %>%
+  kable(booktabs = TRUE, caption = "Data Dictionary") %>%
+  kable_styling(font_size = 11, latex_options = c("striped", "scale_down", "hold_position")) %>%
+  column_spec(3, width = "40em") %>%
+  row_spec(0, bold = TRUE)
+```
+
+
+Note that all values in "date" are specified in UTC (Coordinated Universal Time) and of the form: YYYY-MM-DDTHH:MM:SS+ssss, where the prefix before T refers to the date, the suffix after T refers to the specified UTC time and ssss means the sub-seconds expressed between 1/10 of a second to microsecond resolution.  
+
+By exploring variables "magnitude.type", we found out the earthquakes were recoreded in different magnitude scales. 
+
+```{r, echo=FALSE}
+cat("*Group by magnitude type:\n")
+table(eqarchive$magnitude.type)
+```
+
+$M_{L}$ means local magnitude, which is the magnitude defined by Charles Richter for California. However, due to the different attenuation methods of seismic waves in Eastern North America, Otto Nuttli defined a magnitude formula more suitable for Eastern North America, called Magnitude Nuttli, which is $m_{N}$. There exists some other scales of magnitude, but the magnitude of the moment scale ($M_{W}$ or $M$) is the most common way to describe earthquakes. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+
+The main benefit of Mw is that the magnitude is directly tied to earthquake source processes that do not saturate. Body wave magnitudes ($m_{b}$) and surface magnitudes ($M_{s}$) do not correctly reflect the size of large earthquakes due to saturating at large magnitudes.
+
+Negative magnitude is not an error, because magnitude calculations are based on a logarithmic scale. 10 times drop in amplitude decreases the magnitude by 1. For example, magnitude -1 is 10 time less than magnitude 0. Negative magnitude represents small earthquake which are not felt by human. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
 
 # References{.allowframebreaks}
