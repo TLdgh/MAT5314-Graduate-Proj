@@ -13,6 +13,13 @@ fontsize: 10pt
 bibliography: References.bib
 link-citations: yes
 ---
+
+
+```{r setup, include=FALSE}
+library(plotly)
+library(tidyverse)
+```
+
 # Introduction
 Earthquakes are usually caused when the underground rock suddenly breaks and there is rapid motion along a fault. They can be categorized into natural earthquakes and artificial earthquakes. Natural earthquakes can be further classified into tectonic earthquakes and volcanic earthquakes. Tectonic earthquakes are caused by the rupture of rocks deep in the ground and the rapid release of energy accumulated over a long period of time. Volcanic earthquakes are caused by volcanic eruptions. In addition, artificial earthquakes are caused by human activities that alter the stresses and strains on Earth's crust. In our project we will only focus on the natural earthquake due to its probabilistic nature of occurrence.
 
@@ -24,5 +31,32 @@ We focus on a data set of earthquake occurrence in Canada provided by the Govern
 
 # Method
 First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Third, we will use geographic characteristics such as longitude, latitude and magnitude to identify potential groups of clusters. We may use different techniques of cluster analysis to achieve this goal. This will allow us to compare the predicted clusters with the actual location of earthquakes. Lastly, we will try to estimate the probability of earthquakes in high-risk regions by using the variables from the data and the Epidemic-Type Aftershocks Sequence (ETAS) model.
+
+
+
+# Exploratory Analysis
+```{r}
+data<-read.csv("eqarchive-en.csv")
+head(data)
+```
+
+```{r}
+fig <- data%>%plot_ly( 
+  lat = ~latitude,
+  lon = ~longitude,
+  marker = list(color = ~magnitude, colorscale = 'Hot', opacity=0.5, size=~magnitude, showscale=TRUE, reversescale=TRUE),
+  type = 'scattermapbox', mode="markers",text = ~paste("Magnitude: ", magnitude)) %>%
+  layout(
+    mapbox = list(
+      style = 'open-street-map',
+      zoom =2.5,
+      center = list(lon = -88, lat = 34))) 
+
+fig
+```
+We have plotted the locations of earthquakes on the map, and it is evident that there is a substantial amount of data. Earthquakes primarily occur in regions of Canada that are in proximity to the United States and Greenland.
+British Columbia, New Brunswick, and Yukon experience earthquakes more frequently than other provinces. British Columbia and Yukon are located on the Pacific Plate boundary, where the Pacific Plate is subducting beneath the North American Plate. This subduction can lead to significant seismic activity. New Brunswick is near the St. Lawrence rift system, which is associated with fault lines and seismic activity.
+
+
 
 # References{.allowframebreaks}
