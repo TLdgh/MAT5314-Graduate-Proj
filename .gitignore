@@ -9,14 +9,13 @@ eqarchive-en.csv
 
 # RStudio files
 .Rproj.user/
+MAT5314-Graduate-Proj.Rproj
 
 # Project file
-MAT5314-Graduate-Proj.Rproj
 *.html
 *.log
 *.pdf
-
 Figures/*_files/
 !Citation/*
-MAT5314-Project-2.tex
+MAT5314-Graduate-Proj.tex
 
