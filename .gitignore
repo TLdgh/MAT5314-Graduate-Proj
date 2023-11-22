@@ -17,5 +17,5 @@ MAT5314-Graduate-Proj.Rproj
 *.pdf
 *.tex
 Figures/*_files/
-!Citation/*
+!Citation/*.pdf
 
