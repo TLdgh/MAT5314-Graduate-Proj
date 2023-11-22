@@ -1,23 +1,29 @@
 ---
 title: |
-  | \vspace{-5em}MAT5314 Graduate Project Team 2
+  | \vspace{-4em}MAT5314 Graduate Project: Sesmic Data Analysis
 author: 
   - Teng Li(7373086)
   - Shiya Gao(300381032) 
   - Chuhan Yue(300376046)
   - Yang Lyu(8701121)
-output: pdf_document
+output: 
+  pdf_document: 
+    keep_tex: true
+    includes:
+      in_header: columns.tex
+fontsize: 11pt
 header-includes: 
   - \renewcommand{\and}{\\}
-fontsize: 10pt
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
 bibliography: References.bib
 link-citations: yes
 ---
-
-
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 library(plotly)
 library(tidyverse)
+library(kableExtra)
 ```
 
 # Introduction
@@ -36,6 +42,20 @@ First, we will demonstrate some aspects of the earthquake occurrence by visualiz
 eqarchive <- read.csv("eqarchive-en.csv", header = TRUE)
 ```
 
+data dictionary: (https://earthquakescanada.nrcan.gc.ca/info-gen/glossa-en.php)
+
+latitude: The location of a point north or south of the equator. Latitude is shown on a map or globe as east-west lines parallel to the equator.  
+
+longitude: The location of a point east or west of the prime meridian. Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.  
+
+depth: The value given is the depth below the surface of the mean spheroid.  
+
+magnitude: Magnitude is a measure of the amount of energy released during an earthquake. It may be expressed using the Richter scale.  
+
+1. $M_{L}$ means local magnitude, which is the magnitude defined by Charles Richter for California. However, due to the different attenuation methods of seismic waves in Eastern North America, Otto Nuttli defined a magnitude formula more suitable for Eastern North America, called Magnitude Nuttli, which is $m_{N}$. There exists some other scales of magnitude, but the magnitude of the moment scale ($M_{W}$ or $M$) is the most common way to describe earthquakes. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+
+2. Negative magnitude is not an error, because magnitude calculations are based on a logarithmic scale. 10 times drop in amplitude decreases the magnitude by 1. Hence magnitude -1 is 10 time less than magnitude 0. Negative magnitude represents small earthquake which are not felt by human. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+
 ```{r, echo=FALSE}
 DataDict<-data.frame(
   Variables=colnames(eqarchive), 
@@ -51,11 +71,7 @@ DataDict<-data.frame(
             "continued for place"
             )
 )
-```
-
-```{r, echo=FALSE}
-DataDict %>%
-  remove_rownames() %>%
+DataDict%>%remove_rownames() %>%
   kable(booktabs = TRUE, caption = "Data Dictionary") %>%
   kable_styling(font_size = 11, latex_options = c("striped", "scale_down", "hold_position")) %>%
   column_spec(3, width = "40em") %>%
@@ -65,7 +81,7 @@ DataDict %>%
 
 Note that all values in "date" are specified in UTC (Coordinated Universal Time) and of the form: YYYY-MM-DDTHH:MM:SS+ssss, where the prefix before T refers to the date, the suffix after T refers to the specified UTC time and ssss means the sub-seconds expressed between 1/10 of a second to microsecond resolution.  
 
-By exploring variables "magnitude.type", we found out the earthquakes were recoreded in different magnitude scales. 
+By exploring variables "magnitude.type", we found out the earthquakes were recorded in different magnitude scales. 
 
 ```{r, echo=FALSE}
 cat("*Group by magnitude type:\n")
@@ -81,13 +97,9 @@ Negative magnitude is not an error, because magnitude calculations are based on 
 
 
 # Exploratory Analysis
-```{r}
-data<-read.csv("eqarchive-en.csv")
-head(data)
-```
 
 ```{r}
-fig <- data%>%plot_ly( 
+fig <- eqarchive%>%plot_ly( 
   lat = ~latitude,
   lon = ~longitude,
   marker = list(color = ~magnitude, colorscale = 'Hot', opacity=0.5, size=~magnitude, showscale=TRUE, reversescale=TRUE),
@@ -104,6 +116,14 @@ fig
 We have plotted the locations of earthquakes on the map, and it is evident that there is a substantial amount of data. Earthquakes primarily occur in regions of Canada that are in proximity to the United States and Greenland.
 British Columbia, New Brunswick, and Yukon experience earthquakes more frequently than other provinces. British Columbia and Yukon are located on the Pacific Plate boundary, where the Pacific Plate is subducting beneath the North American Plate. This subduction can lead to significant seismic activity. New Brunswick is near the St. Lawrence rift system, which is associated with fault lines and seismic activity.
 
+```{r}
+eqarchive%>%mutate(date=as.POSIXct(date, format = "%Y-%m-%d"))%>%ggplot(aes(x = date, y = magnitude)) +
+  geom_point() +
+  labs(x = "Date", y = "Magnitude") +
+  ggtitle("Earthquake Magnitude Over Time") +
+  theme_minimal()
+```
+
 The magnitude of earthquakes is usually divided into seven main categories, which, depending on the magnitude, we can describe as follows:
 
 1. "Microearthquake": Magnitude less than or equal to 1. These are tiny earthquakes that are usually hard to detect.
@@ -116,11 +136,9 @@ The magnitude of earthquakes is usually divided into seven main categories, whic
 
 We calculated the number of earthquakes occurring in each of these seven different earthquake magnitude categories separately. We found that between 1985 and 2019，"Moderate Earthquake" occurred 828 times ; "Strong Earthquake" had 36 recorded occurrences; "Major Earthquake" occurred only three times, and "Massive Earthquake" never occurred during this 35-year period. The cumulative number of earthquakes in these categories shows a significant difference compared to the other three categories. This suggests that most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
 ```{r}
-eq_data<-read.csv("eqarchive-en.csv")
-
 #Dividing the magnitude into 7 levels 
 breaks <- c(-Inf, 1, 3, 4.5, 6, 7, 8, Inf)
-categories <- cut(eq_data$magnitude, breaks = breaks)
+categories <- cut(eqarchive$magnitude, breaks = breaks)
 magnitude_level <- table(categories)
 magnitude_level_df <- data.frame(
   Magnitude_Range = as.character(names(magnitude_level)),
@@ -152,9 +170,9 @@ We have separately calculated the number of earthquakes with a magnitude \(M \in
 Based on this, we can infer that from 1985 to 2019, the number of earthquakes with a magnitude of 4.5 or higher increased with the passage of years, particularly during the ten-year period from 2000 to 2010, when the growth rate was particularly pronounced.
 
 ```{r}
-selected_eq_data <- eq_data[eq_data$magnitude >= 4.5, ]
+selected_eq_data <- eqarchive[eqarchive$magnitude >= 4.5, ]
 
-frequency <- eq_data %>%
+frequency <- eqarchive %>%
   group_by(year = year(date)) %>%
   summarise(count = n())
 frequency$year <- as.numeric(frequency$year)
