@@ -24,6 +24,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 library(plotly)
 library(tidyverse)
 library(kableExtra)
+source("CodeSpace.R")
 ```
 
 # Introduction
@@ -185,5 +186,23 @@ plot_ly(data = frequency, x = ~year, y = ~count, type = "scatter", mode = "lines
          yaxis = list(title = "Number of Earthquakes")
          )
 ```
+
+```{r}
+data<-eqarchive%>%mutate(YM=paste0(year(date), "-", month(date), "-1"))%>%
+  mutate(YM=as.POSIXct(YM))%>%filter(magnitude>=4)%>%group_by(YM)%>%summarise(n=n())
+
+(ests<-MLE(data=data$n, p=c(0.04,0.02,0.3))$estimate)
+
+EqCount_pred<-rep(data$n[1], length(data$n))
+for (i in 2:length(data$n)) {
+  EqCount_pred[i]<-  sum(rbinom(EqCount_pred[i-1], 1, ests[3]))+rPQX(ests[1], ests[2], 1)
+}
+
+data.frame(Time=data$YM, EqCount=data$n, EqCount_pred)%>%gather(key = "Type",value = "value", EqCount:EqCount_pred)%>%
+  plot_ly(x=~Time, y=~value, color = ~Type, type="scatter", mode="lines",
+          line=list(color=~c(EqCount="black", EqCount_pred="red")[Type]))%>%
+  layout(paper_bgcolor="lightgrey", plot_bgcolor="lightgrey")
+```
+
 
 # References{.allowframebreaks}

@@ -6,38 +6,6 @@ rPQX<-function(alpha, theta, n){
   return(res)
 }
 
-# My simulated data with parameter alpha = 1 and theta=0.5
-X<-rPQX(24.89,0.264, 50000)
-plot_ly()%>%add_histogram(x=~X, type = "histogram", histnorm = "probability density", nbinsx=150, marker=list(color="skyblue", line=list(color="black", width=1.5)))%>%
-  add_trace(x=density(X)$x, y=density(X)$y, type="scatter", mode="lines", line=list(color="blue", width=1.5))%>%
-  layout(xaxis=list(range=c(-0.5,20.5)))
-
-
-
-# Bootstrap estimation
-BootX<-sapply(1:10000, function(i){
-  samp<-sample(X, size = length(X), replace = TRUE)
-  m1<-mean(samp)
-  m2<-samp%*%samp/length(samp)
-  a<- (-7*m1^2+sqrt(25*m1^4+12*m1^3-12*m1^2*m2) -3*(m1-m2))/(2*m1^2+m1-m2)
-  b<- (a+3)/(m1*(1+a))
-  return(c(a, b))
-})
-mean(BootX[1,])
-mean(BootX[2,])
-
-
-
-# Time Series
-alpha<-0.35
-theta<-0.15
-p<-0.3
-
-X<-rep(1, 1000)
-for (i in 2:1000) {
-  X[i]<-  sum(rbinom(X[i-1], 1, p))+rPQX(alpha, theta, 1)
-}
-
 # YW
 YW<-function(data){
   m<-mean(data)
@@ -74,29 +42,6 @@ MLE<-function(data, p){
   
   nlm(f=l, p=p, x=data)
 }
-
-
-#Real data
-eqarchive<-read.csv("eqarchive-en.csv")
-eqarchive<-eqarchive%>%mutate(YM=paste0(year(date), "-", month(date), "-1"))
-data<-eqarchive%>%mutate(YM=as.POSIXct(YM))%>%filter(magnitude>=4)%>%group_by(YM)%>%summarise(n=n())
-YW(data=data$n)
-MLE(data=data$n, p=c(0.04,0.02,0.3))
-
-EqCount_pred<-rep(data$n[1], length(data$n))
-for (i in 2:length(data$n)) {
-  EqCount_pred[i]<-  sum(rbinom(EqCount_pred[i-1], 1, 0.3666483))+rPQX(24.8872548, 0.2637256,1)
-}
-data.frame(Time=data$YM, EqCount=data$n, EqCount_pred)%>%gather(key = "Type",value = "value", EqCount:EqCount_pred)%>%
-  plot_ly(x=~Time, y=~value, color = ~Type, type="scatter", mode="lines",
-          line=list(color=~c(EqCount="black", EqCount_pred="red")[Type]))%>%
-  layout(paper_bgcolor="lightgrey", plot_bgcolor="lightgrey")
-
-
-
-
-
-
 
 
 Sim_INARPQX<-setRefClass(
@@ -169,12 +114,6 @@ Sim_INARPQX<-setRefClass(
     }
   )
 )
-res<-Sim_INARPQX$new(size=1000, nboot=100, plotMSE=FALSE)
-res<-Sim_INARPQX$new(size=2000, nboot=100, plotMSE=TRUE)
-res<-Sim_INARPQX$new(size=2000, nboot=100, plotMSE=TRUE, initialp=c(0.04,0.02,0.3))
-
-res$estimates
-
-YW_Boot(data=data, 1000000)
-
-
+#res<-Sim_INARPQX$new(size=1000, nboot=100, plotMSE=FALSE)
+#res<-Sim_INARPQX$new(size=2000, nboot=100, plotMSE=TRUE)
+#res<-Sim_INARPQX$new(size=2000, nboot=100, plotMSE=TRUE, initialp=c(0.04,0.02,0.3))
