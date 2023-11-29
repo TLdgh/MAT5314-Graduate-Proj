@@ -1,5 +1,6 @@
 ---
-title: "MAT5314 Graduate Project"
+title: |
+  | \vspace{-5em}MAT5314 Graduate Project Team 2
 author: 
   - Teng Li(7373086)
   - Shiya Gao(300381032) 
@@ -8,37 +9,117 @@ author:
 output: pdf_document
 header-includes: 
   - \renewcommand{\and}{\\}
+fontsize: 10pt
+bibliography: References.bib
+link-citations: yes
 ---
 
+
+```{r setup, include=FALSE}
+library(plotly)
+library(tidyverse)
+```
+
 # Introduction
+Earthquakes are usually caused when the underground rock suddenly breaks and there is rapid motion along a fault. They can be categorized into natural earthquakes and artificial earthquakes. Natural earthquakes can be further classified into tectonic earthquakes and volcanic earthquakes. Tectonic earthquakes are caused by the rupture of rocks deep in the ground and the rapid release of energy accumulated over a long period of time. Volcanic earthquakes are caused by volcanic eruptions. In addition, artificial earthquakes are caused by human activities that alter the stresses and strains on Earth's crust. In our project we will only focus on the natural earthquake due to its probabilistic nature of occurrence.
 
-## 1)
-### what causes earthquake
-Earthquakes are usually caused when the underground rock suddenly breaks and there is rapid motion along a fault. According to the causes, earthquakes can be categorized into natural earthquakes and artificial earthquakes. And natural earthquakes are mainly tectonic earthquakes and volcanic earthquakes. Tectonic earthquakes are caused by the rupture of rocks deep in the ground and the rapid release of energy accumulated over a long period of time. Volcanic earthquakes are caused by volcanic eruptions. In addition, artificial earthquakes are caused by human activities that alter the stresses and strains on Earth's crust.
-
-### why it is difficult to predict
 Earthquakes are difficult to predict for three main reasons. Firstly, plate boundaries are prone to earthquakes, but the way and speed of plate movement is difficult to measure and predict accurately. Secondly, the low frequency of large earthquakes does not provide enough data for earthquake modeling. Thirdly, it is difficult to enter the inner crust of the earth to observe the data, so most of the detection of earthquakes is done by collecting some vibrations and signals on the surface to analyze and predict them, which leads to a decrease in the accuracy of earthquake prediction.
 
+Frequent historical earthquakes give us a huge data set that can be used to study earthquake causes, correlations, space-time, and further earthquake prediction. Current researches have provided several statistical models to analyze the earthquake processes. Trigger model, a special case of the Neyman-Scott clustering model, can be used to estimate aftershocks after a major earthquake [@Cite1]. Epidemic-Type Aftershocks Sequence (ETAS) model is also widely used to forecast earthquake occurrences [@Cite2]. In addition, time series analysis can be done to explore cycles related to earthquake frequency and it is also effective in predicting large earthquakes [@Cite3]. There are also several techniques from machine learning that provide us alternative ways other than conventional statistical models to analyze the earthquake data. For example, deep learning can be used to predict seismic events, including intensity and location [@Cite4]. Clustering model can identify regions with high-frequency earthquakes to upgrade building structures to reduce damage from impending earthquakes.
 
-## 2)
-### how do others analyze this data? what are the methods so far
-Frequent historical earthquakes give us a huge data set that can be used to study earthquake causes, correlations, space-time, and further earthquake prediction. Several statistical models can be applied to the analysis of earthquake processes. Trigger model, a special case of the Neyman-Scott clustering model, can be used to estimate aftershocks after a major earthquake (1). Epidemic-Type Aftershocks Sequence (ETAS) model is also widely used to forecast earthquake occurrences (2). People perform time series analysis to explore cycles related to earthquake frequency. Time series analysis is effective in predicting large earthquakes (3). Deep learning provides us the prediction of seismic events, including intensity and location (4). Clustering model can identify regions with high-frequency earthquakes to upgrade building structures to reduce damage from impending earthquakes.
-
-## 3)
-### why do we want to analyze this data (to draw some inference? to predict? to check model legitimacy?)
+We focus on a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze the data to give a detailed review of this natural disaster in the country and make some inference about its characteristics. In particular, we want to check if there's any location-wise pattern in earthquake occurrence and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as time. Finally we want to apply some probabilistic models that have been extensively studies by other researchers to the data in order to assess the likelihood of future occurrence in high-risk area.
 
 # Method
+First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Third, we will use geographic characteristics such as longitude, latitude and magnitude to identify potential groups of clusters. We may use different techniques of cluster analysis to achieve this goal. This will allow us to compare the predicted clusters with the actual location of earthquakes. Lastly, we will try to estimate the probability of earthquakes in high-risk regions by using the variables from the data and the Epidemic-Type Aftershocks Sequence (ETAS) model.
 
-## visualization of data
-First, we will visualize seismic data by map charts, plots and so on. These charts can allow us to better understand seismic data and help us to select variables later.
-## time series analysis
-Second, we will use time series analysis to study whether seismic events have temporal trends and seasonal patterns or not.
-## location analysis (cluster analysis?)
-Third, we plan to select some geographic characteristics, such as longitude, latitude and magnitude. Then we can use these variables to find relationship between those variables and the location of earthquakes.
-## In-depth exploration of the data using longitude/lattitude/magnitude
-Fourth, we will use the variable we selected in the last step to calculate the probability of earthquakes.
-# Result
 
-# Discussion
 
-# Conclusion
+# Exploratory Analysis
+```{r}
+data<-read.csv("eqarchive-en.csv")
+head(data)
+```
+
+```{r}
+fig <- data%>%plot_ly( 
+  lat = ~latitude,
+  lon = ~longitude,
+  marker = list(color = ~magnitude, colorscale = 'Hot', opacity=0.5, size=~magnitude, showscale=TRUE, reversescale=TRUE),
+  type = 'scattermapbox', mode="markers",text = ~paste("Magnitude: ", magnitude)) %>%
+  layout(
+    mapbox = list(
+      style = 'open-street-map',
+      zoom =2.5,
+      center = list(lon = -88, lat = 34))) 
+
+fig
+```
+
+We have plotted the locations of earthquakes on the map, and it is evident that there is a substantial amount of data. Earthquakes primarily occur in regions of Canada that are in proximity to the United States and Greenland.
+British Columbia, New Brunswick, and Yukon experience earthquakes more frequently than other provinces. British Columbia and Yukon are located on the Pacific Plate boundary, where the Pacific Plate is subducting beneath the North American Plate. This subduction can lead to significant seismic activity. New Brunswick is near the St. Lawrence rift system, which is associated with fault lines and seismic activity.
+
+The magnitude of earthquakes is usually divided into seven main categories, which, depending on the magnitude, we can describe as follows:
+
+1. "Microearthquake": Magnitude less than or equal to 1. These are tiny earthquakes that are usually hard to detect.
+2、"Minor Earthquake" or "Microseismic": the magnitude is greater than 1 and less than or equal to 3. This type of earthquake is usually not easy to be perceived, especially when the epicenter is deeper.
+3. "Felt Earthquake": Magnitude greater than 3, less than or equal to 4.5. People can feel this kind of earthquake, but it usually does not cause damage.
+4、"Moderate Earthquake": The magnitude of the earthquake is greater than 4.5, less than or equal to 6. This type of earthquake is potentially destructive, but the extent of damage depends on a number of factors, such as the depth of the epicenter and the distance from the epicenter.
+5. "Strong Earthquake": Magnitude greater than 6, less than or equal to 7. This type of earthquake is more destructive.
+6. "Major Earthquake": The magnitude is greater than 7 and less than or equal to 8. This type of earthquake may cause surface rupture and widespread seismic wave propagation.
+7. "Massive Earthquake": The magnitude is greater than 8 or higher. Such earthquakes usually result in significant crustal displacement and seismic wave propagation, posing a significant threat to the surrounding area.
+
+We calculated the number of earthquakes occurring in each of these seven different earthquake magnitude categories separately. We found that between 1985 and 2019，"Moderate Earthquake" occurred 828 times ; "Strong Earthquake" had 36 recorded occurrences; "Major Earthquake" occurred only three times, and "Massive Earthquake" never occurred during this 35-year period. The cumulative number of earthquakes in these categories shows a significant difference compared to the other three categories. This suggests that most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
+```{r}
+eq_data<-read.csv("eqarchive-en.csv")
+
+#Dividing the magnitude into 7 levels 
+breaks <- c(-Inf, 1, 3, 4.5, 6, 7, 8, Inf)
+categories <- cut(eq_data$magnitude, breaks = breaks)
+magnitude_level <- table(categories)
+magnitude_level_df <- data.frame(
+  Magnitude_Range = as.character(names(magnitude_level)),
+  Earthquake_Count = as.numeric(magnitude_level)
+)
+print(magnitude_level_df)
+```
+
+In order to compare the relative proportions of the number of earthquakes occurring in each earthquake magnitude category corresponding to the overall number of earthquakes more visually, we plotted the pie chart. As can be seen, 73% earthquake's magnitude  \(M \in (1, 3]\), which was "Minor Earthquake". This was the highest ratio for these seven earthquake magnitude categories and it accounted for almost three quarters of the total earthquakes happened between 1985 and 2019 year. The proportion of earthquakes whose magnitude \(M \in (3, 4.5]\) was a little greater than the earthquakes whose magnitude \(M \in (-Inf, 1]\). These two types of earthquakes accounted for 25% of the total and the remaining four categories of large earthquakes accounted for less than 1% of the total. Although these earthquakes were the most destructive, most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
+
+```{r}
+#Calculating the percentages for different earthquake magnitude's levels
+percentages <- (magnitude_level_df$Earthquake_Count / sum(magnitude_level_df$Earthquake_Count))*100
+A <- as.data.frame(percentages)
+
+#Draw the pie chart of the percentage
+piechart <- plot_ly(A, labels=~magnitude_level_df$Magnitude_Range, values=~percentages, type="pie", width = 500, height = 400)%>% 
+  layout(margin=list(l=0, r=0, b=0, t=20),
+         title = list(text="Pie Chart of Magnitude levels", font=list(size=10)),
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         legend = list(title = list(text="Magnitude levels"),font=list(size=10))
+  )
+piechart
+```
+
+We have separately calculated the number of earthquakes with a magnitude \(M \in [4.5, Inf)\) that occurred each year and plotted a time series graph. From 1985 to 1999, there was a slow decrease followed by an increase in the number of earthquakes. However, the annual earthquake count remained around 1500 on average and did not exceed 2000. Starting from the year 2000, we observed a significant upward trend in the occurrence of earthquakes with a magnitude of 4.5 or higher, reaching its peak in 2010 with 5409 events. From 2011 to 2019, although there were noticeable fluctuations in the annual earthquake count, it consistently remained above 3000 and did not drop below 3253, indicating a relatively high frequency.
+
+Based on this, we can infer that from 1985 to 2019, the number of earthquakes with a magnitude of 4.5 or higher increased with the passage of years, particularly during the ten-year period from 2000 to 2010, when the growth rate was particularly pronounced.
+
+```{r}
+selected_eq_data <- eq_data[eq_data$magnitude >= 4.5, ]
+
+frequency <- eq_data %>%
+  group_by(year = year(date)) %>%
+  summarise(count = n())
+frequency$year <- as.numeric(frequency$year)
+
+x <- ts(frequency)
+
+plot_ly(data = frequency, x = ~year, y = ~count, type = "scatter", mode = "lines", name = "Number of Earthquakes with Magnitude 4.5 or Above Occurred from 1985 to 2019") %>%
+  layout(title = "Number of Earthquakes with Magnitude 4.5 or Above",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Number of Earthquakes")
+         )
+```
+
+# References{.allowframebreaks}

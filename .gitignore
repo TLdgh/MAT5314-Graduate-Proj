@@ -1,6 +1,22 @@
-.Rproj.user
+# History files
 .Rhistory
-.RData
-.Ruserdata
+.Rapp.history
 .DS_Store
+
+# Session Data files
+.RData
+eqarchive-en.csv
+
+# RStudio files
+.Rproj.user/
+
+# Project file
 MAT5314-Graduate-Proj.Rproj
+*.html
+*.log
+*.pdf
+
+Figures/*_files/
+!Citation/*
+MAT5314-Project-2.tex
+
