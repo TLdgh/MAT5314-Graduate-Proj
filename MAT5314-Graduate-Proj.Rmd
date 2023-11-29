@@ -18,6 +18,9 @@ link-citations: yes
 ```{r setup, include=FALSE}
 library(plotly)
 library(tidyverse)
+library(htmlwidgets)
+library(zoo)
+library(tseries)
 ```
 
 # Introduction
@@ -61,14 +64,15 @@ British Columbia, New Brunswick, and Yukon experience earthquakes more frequentl
 The magnitude of earthquakes is usually divided into seven main categories, which, depending on the magnitude, we can describe as follows:
 
 1. "Microearthquake": Magnitude less than or equal to 1. These are tiny earthquakes that are usually hard to detect.
-2、"Minor Earthquake" or "Microseismic": the magnitude is greater than 1 and less than or equal to 3. This type of earthquake is usually not easy to be perceived, especially when the epicenter is deeper.
+2. "Minor Earthquake" or "Microseismic": the magnitude is greater than 1 and less than or equal to 3. This type of earthquake is usually not easy to be perceived, especially when the epicenter is deeper.
 3. "Felt Earthquake": Magnitude greater than 3, less than or equal to 4.5. People can feel this kind of earthquake, but it usually does not cause damage.
-4、"Moderate Earthquake": The magnitude of the earthquake is greater than 4.5, less than or equal to 6. This type of earthquake is potentially destructive, but the extent of damage depends on a number of factors, such as the depth of the epicenter and the distance from the epicenter.
+4. "Moderate Earthquake": The magnitude of the earthquake is greater than 4.5, less than or equal to 6. This type of earthquake is potentially destructive, but the extent of damage depends on a number of factors, such as the depth of the epicenter and the distance from the epicenter.
 5. "Strong Earthquake": Magnitude greater than 6, less than or equal to 7. This type of earthquake is more destructive.
 6. "Major Earthquake": The magnitude is greater than 7 and less than or equal to 8. This type of earthquake may cause surface rupture and widespread seismic wave propagation.
 7. "Massive Earthquake": The magnitude is greater than 8 or higher. Such earthquakes usually result in significant crustal displacement and seismic wave propagation, posing a significant threat to the surrounding area.
 
-We calculated the number of earthquakes occurring in each of these seven different earthquake magnitude categories separately. We found that between 1985 and 2019，"Moderate Earthquake" occurred 828 times ; "Strong Earthquake" had 36 recorded occurrences; "Major Earthquake" occurred only three times, and "Massive Earthquake" never occurred during this 35-year period. The cumulative number of earthquakes in these categories shows a significant difference compared to the other three categories. This suggests that most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
+We calculated the number of earthquakes occurring in each of these seven different earthquake magnitude categories separately. We found that between 1985 and 2019, "Moderate Earthquake" occurred 828 times ; "Strong Earthquake" had 36 recorded occurrences; "Major Earthquake" occurred only three times, and "Massive Earthquake" never occurred during this 35-year period. The cumulative number of earthquakes in these categories shows a significant difference compared to the other three categories. This suggests that most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
+
 ```{r}
 eq_data<-read.csv("eqarchive-en.csv")
 
@@ -83,7 +87,7 @@ magnitude_level_df <- data.frame(
 print(magnitude_level_df)
 ```
 
-In order to compare the relative proportions of the number of earthquakes occurring in each earthquake magnitude category corresponding to the overall number of earthquakes more visually, we plotted the pie chart. As can be seen, 73% earthquake's magnitude  \(M \in (1, 3]\), which was "Minor Earthquake". This was the highest ratio for these seven earthquake magnitude categories and it accounted for almost three quarters of the total earthquakes happened between 1985 and 2019 year. The proportion of earthquakes whose magnitude \(M \in (3, 4.5]\) was a little greater than the earthquakes whose magnitude \(M \in (-Inf, 1]\). These two types of earthquakes accounted for 25% of the total and the remaining four categories of large earthquakes accounted for less than 1% of the total. Although these earthquakes were the most destructive, most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
+In order to compare the relative proportions of the number of earthquakes occurring in each earthquake magnitude category corresponding to the overall number of earthquakes more visually, we plotted the pie chart. As can be seen, 73% earthquake's magnitude $M \in (1, 3]$, which was "Minor Earthquake". This was the highest ratio for these seven earthquake magnitude categories and it accounted for almost three quarters of the total earthquakes happened between 1985 and 2019 year. The proportion of earthquakes whose magnitude $M \in (3, 4.5]$ was a little greater than the earthquakes whose magnitude $M \in (-\infty, 1]$. These two types of earthquakes accounted for 25% of the total and the remaining four categories of large earthquakes accounted for less than 1% of the total. Although these earthquakes were the most destructive, most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
 
 ```{r}
 #Calculating the percentages for different earthquake magnitude's levels
@@ -101,7 +105,7 @@ piechart <- plot_ly(A, labels=~magnitude_level_df$Magnitude_Range, values=~perce
 piechart
 ```
 
-We have separately calculated the number of earthquakes with a magnitude \(M \in [4.5, Inf)\) that occurred each year and plotted a time series graph. From 1985 to 1999, there was a slow decrease followed by an increase in the number of earthquakes. However, the annual earthquake count remained around 1500 on average and did not exceed 2000. Starting from the year 2000, we observed a significant upward trend in the occurrence of earthquakes with a magnitude of 4.5 or higher, reaching its peak in 2010 with 5409 events. From 2011 to 2019, although there were noticeable fluctuations in the annual earthquake count, it consistently remained above 3000 and did not drop below 3253, indicating a relatively high frequency.
+We have separately calculated the number of earthquakes with a magnitude $M \in [4.5, \infty)$ that occurred each year and plotted a time series graph. From 1985 to 1999, there was a slow decrease followed by an increase in the number of earthquakes. However, the annual earthquake count remained around 1500 on average and did not exceed 2000. Starting from the year 2000, we observed a significant upward trend in the occurrence of earthquakes with a magnitude of 4.5 or higher, reaching its peak in 2010 with 5409 events. From 2011 to 2019, although there were noticeable fluctuations in the annual earthquake count, it consistently remained above 3000 and did not drop below 3253, indicating a relatively high frequency.
 
 Based on this, we can infer that from 1985 to 2019, the number of earthquakes with a magnitude of 4.5 or higher increased with the passage of years, particularly during the ten-year period from 2000 to 2010, when the growth rate was particularly pronounced.
 
@@ -120,6 +124,125 @@ plot_ly(data = frequency, x = ~year, y = ~count, type = "scatter", mode = "lines
          xaxis = list(title = "Year"),
          yaxis = list(title = "Number of Earthquakes")
          )
+```
+
+To assess the forecasting accuracy of the ARIMA model for earthquake events, we processed the original data into a monthly data from 1985 January to 2019 December. Subsequently, we computed the count of earthquakes with a magnitude greater than 4 for each month and year, resulting in a corresponding time series and we utilized the data from the first 32 years as the training set, reserving the data from the subsequent 3 years as the testing set.
+
+Figure() illustrated this time series, and upon observation, it was evident that, with the exception of a few months characterized by a higher frequency of earthquakes exceeding magnitude 4, the curve generally fluctuated around a relatively constant level. The amplitude of these fluctuations was minimal, suggesting stationarity in the time series.
+
+```{r}
+eq_data1 <- eq_data %>%
+  select(date, magnitude) %>%
+  filter(magnitude >= 4) %>%
+  mutate(year_month = as.yearmon(date))
+
+summary_data <- eq_data1 %>%
+  group_by(year_month) %>%
+  summarize(row_count = n())
+
+summary_data$year_month <- as.Date(as.yearmon(summary_data$year_month))
+
+all_months <- seq(as.Date("1985-01-01"), as.Date("2019-12-01"), by = "months")
+all_months_data <- data.frame(year_month = as.Date(as.yearmon(all_months)))
+
+summary_data <- all_months_data %>%
+  left_join(summary_data, by = "year_month") %>%
+  replace_na(list(row_count = 0))
+
+eq_ts_all <- ts(summary_data$row_count, frequency = 12, start = c(1985,1))
+eq_ts <- window(eq_ts_all, start=c(1985,1), end=c(2016,12))
+eq_ts_test <- window(eq_ts_all, start=c(2017,1), end=c(2019,12)) 
+
+plot(eq_ts)
+```
+
+Next, we conducted a decomposition analysis on this time series. Figure() displayed, from top to bottom, the original time series plot, trend plot, seasonal plot, and residual plot. From the graphs, we observed that the fluctuation in the occurrence of earthquake with a magnitude exceeding 4 was not pronounced, maintaining a relatively stable state, except for a few sudden increases.
+
+By subtracting the seasonal component from the original time series, we obtained a seasonally adjusted time series. The results are depicted in Figure(): the black curve represented the original time series, while the red curve represented the time series after removing the seasonal component. The small difference between the two curves indicated that the influence of seasonal variations on the frequency of seismic events with a magnitude exceeding 4 was minimal.
+
+```{r}
+decomposed_eq <- decompose(eq_ts, type="additive")
+plot(decomposed_eq)
+
+m_t <- decomposed_eq$trend #get the trend
+s_t<- decomposed_eq$seasonal #get the seasonality
+e_t<- decomposed_eq$random # get the random component
+
+adjusted_eq <- eq_ts-decomposed_eq$seasonal
+plot(adjusted_eq)
+lines(eq_ts, col=2)
+```
+
+
+To validate our hypothesis about the lack of pronounced seasonal and trend changes, we applied a linear regression model to fit the data separately.
+
+In the summary we saw that the p-value of the hypothesis test was 0.06847, bigger than 0.05, which meant we could not reject the null hypothesis $H_0:\beta_1=0$. The same as the seasonal changes, because the p-value was equal to 0.06518, so we could not reject the null hypothesis $H_0:\beta_1=0$. Therefore we could assume that all these three components were insignificant in the time series.
+
+```{r}
+z_t<-(eq_ts-s_t) #remove the seasonality first to fit the trend
+z_t<-data.frame(Index=index(z_t), Zt=c(z_t))
+Regression<-lm(Zt~Index, data=z_t) #fitting a simple linear regression model w.r.t time
+slope<-Regression$coefficients[["Index"]] #the parameter of the linear model
+intercept<-Regression$coefficients[["(Intercept)"]] #the intercept of the linear model
+summary(Regression)
+
+z_t1<-(eq_ts) #remove the seasonality first to fit the trend
+z_t1<-data.frame(Index=index(z_t1), Zt1=c(z_t1))
+Regression<-lm(Zt1~Index, data=z_t1) #fitting a simple linear regression model w.r.t time
+slope<-Regression$coefficients[["Index"]] #the parameter of the linear model
+intercept<-Regression$coefficients[["(Intercept)"]] #the intercept of the linear model
+summary(Regression)
+```
+
+Before establishing an appropriate model, it was essential to conduct a stationarity test on the time series data. We posit the null hypothesis as a non-stationary time series, with the alternative hypothesis being 'stationary.' The results of the Augmented Dickey-Fuller (ADF) test yielded a p-value of 0.01, which was less than the significance level of 0.05. This provided sufficient evidence to reject the null hypothesis, indicating that the time series was stationary. Consequently, we could proceed to the next steps: determining the model order and fitting the model.
+
+```{r}
+#ADF Test
+adf_result <- adf.test(adjusted_eq)
+adf_result
+```
+
+Generally, we determined the values of p and q in an ARMA model by observing the ACF and PACF plots. Figures() and () represented the ACF and PACF plots, respectively. It could be observed that the ACF was relatively high for the first two lags, surpassing the threshold line (blue line), and then gradually decrease. Thus, we inferred that the ACF was exhibiting a tailing pattern. On the other hand, the PACF cut off after lag 1 and subsequent PACF for all lags remained within the threshold line (blue line), indicating a truncated PACF. Consequently, we opted for an AR(1) model.
+
+```{r}
+#ACF and PACF plot
+acf(adjusted_eq)
+pacf(adjusted_eq)
+
+#fit an AR(1) model
+model <- arima(e_t, order=c(1,0,0))
+```
+
+If a model was appropriate, the residuals should follow a normal distribution with a mean of 0, and for any lag order, the autocorrelation of residuals should be 0. In other words, the residuals of the model should exhibited independent and normally distributed behavior.
+
+We generated a QQ plot for the residuals of the AR(1) model. As depicted in Figure(), the points on the QQ plot roughly aligned with a straight line, suggesting that the residuals approximately followed a normal distribution.
+
+Another method to assess the adequacy of the model was the Ljung-Box test, which examined whether there was autocorrelation in the residual sequence. The result yielded a p-value of 0.8944, larger than 0.05. This indicated that the residuals had not passed the significance test for autocorrelation, suggesting that the autocorrelation coefficients of the residuals were close to zero. Therefore, the AR(1) model provided a good fit to the data.
+
+```{r}
+#QQ plot of residuals
+qqnorm(model$residuals)
+qqline(model$residuals)
+
+#Box-Ljung Test
+Box.test(model$residuals, type="Ljung-Box") 
+```
+
+Lastly we combined the predicted random component and the deterministic component together to predict the monthly number of earquakes which happened between 2017 to 2019 years and compared the result with the test data. In the figure(), the black line was the truth data and the red one was the prediction with the ARIMA model. It was obvious that there was a really significant difference between these two lines. The forecasting results from the ARIMA model exhibited a roughly similar trend to the actual data only for the period from May 2018 to December 2019. However, the magnitudes of the predicted values significantly deviated from the actual observations. Consequently, the forecasting performance of the ARIMA model was deemed unsatisfactory and did not provide meaningful insights.
+
+```{r}
+#Prediction of error terms using the Box-Jenkins method
+model_pred <- predict(model, n.ahead = 36)
+Random_pred <- model_pred$pred  ## predicted future values
+
+#predicted deterministic part:
+Determ_pred<-s_t[1:36] 
+
+#Combine the deterministic and random parts:
+eq_ts_pred<-Determ_pred+Random_pred
+
+plot(eq_ts_test)
+lines(eq_ts_pred,col="red") 
 ```
 
 # References{.allowframebreaks}
