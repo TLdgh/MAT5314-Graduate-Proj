@@ -2,9 +2,7 @@
 library(plotly)
 library(tidyverse)
 library(htmlwidgets)
-library(xts)
 library(zoo)
-library(forecast)
 library(tseries)
 ```
 
