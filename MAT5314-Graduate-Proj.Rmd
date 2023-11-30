@@ -24,6 +24,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 library(plotly)
 library(tidyverse)
 library(htmlwidgets)
+library(webshot)
 library(zoo)
 library(tseries)
 library(kableExtra)
@@ -196,7 +197,7 @@ To assess the forecasting accuracy of the ARIMA model for earthquake events, we 
 Figure() illustrated this time series, and upon observation, it was evident that, with the exception of a few months characterized by a higher frequency of earthquakes exceeding magnitude 4, the curve generally fluctuated around a relatively constant level. The amplitude of these fluctuations was minimal, suggesting stationarity in the time series.
 
 ```{r}
-eq_data1 <- eq_data %>%
+eq_data1 <- eqarchive %>%
   select(date, magnitude) %>%
   filter(magnitude >= 4) %>%
   mutate(year_month = as.yearmon(date))
@@ -310,6 +311,10 @@ plot(eq_ts_test)
 lines(eq_ts_pred,col="red") 
 ```
 
+# Better Model for Counts
+
+From the previous analysis we have found that the ARIMA model did not yield a good prediction. One obvious flaw was that the predicted number of earthquake per month wasn't integer. We therefore introduce another model proposed by [@PQX].
+
 ```{r}
 data<-eqarchive%>%mutate(YM=paste0(year(date), "-", month(date), "-1"))%>%
   mutate(YM=as.POSIXct(YM))%>%filter(magnitude>=4)%>%group_by(YM)%>%summarise(n=n())
@@ -321,10 +326,17 @@ for (i in 2:length(data$n)) {
   EqCount_pred[i]<-  sum(rbinom(EqCount_pred[i-1], 1, ests[3]))+rPQX(ests[1], ests[2], 1)
 }
 
-data.frame(Time=data$YM, EqCount=data$n, EqCount_pred)%>%gather(key = "Type",value = "value", EqCount:EqCount_pred)%>%
+pqxplot<-data.frame(Time=data$YM, EqCount=data$n, EqCount_pred)%>%gather(key = "Type",value = "value", EqCount:EqCount_pred)%>%
   plot_ly(x=~Time, y=~value, color = ~Type, type="scatter", mode="lines",
           line=list(color=~c(EqCount="black", EqCount_pred="red")[Type]))%>%
   layout(paper_bgcolor="lightgrey", plot_bgcolor="lightgrey")
+
+saveWidget(widget = pqxplot, file = "./Figures/pqxplot.html")
+shots<-webshot(url = "./Figures/pqxplot.html", file = "./Figures/pqxplot.png", delay = 1, zoom = 2)
+```
+
+```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process Prediction", out.height="3in", out.width="3in"}
+knitr::include_graphics("./Figures/pqxplot.png")
 ```
 
 
