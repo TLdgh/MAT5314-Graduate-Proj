@@ -29,6 +29,9 @@ library(zoo)
 library(tseries)
 library(kableExtra)
 source("CodeSpace.R")
+
+axisfont<-list(size=30)
+mars<-list(l=0, r=0, b=0, t=20)
 ```
 
 # Introduction
@@ -41,7 +44,7 @@ Frequent historical earthquakes give us a huge data set that can be used to stud
 We focus on a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze the data to give a detailed review of this natural disaster in the country and make some inference about its characteristics. In particular, we want to check if there's any location-wise pattern in earthquake occurrence and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as time. Finally we want to apply some probabilistic models that have been extensively studies by other researchers to the data in order to assess the likelihood of future occurrence in high-risk area.
 
 # Method
-First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Third, we will use geographic characteristics such as longitude, latitude and magnitude to identify potential groups of clusters. We may use different techniques of cluster analysis to achieve this goal. This will allow us to compare the predicted clusters with the actual location of earthquakes. Lastly, we will try to estimate the probability of earthquakes in high-risk regions by using the variables from the data and the Epidemic-Type Aftershocks Sequence (ETAS) model.
+First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Lastly, we will try to estimate the monthly counts of earthquakes with a new model called INARPQX(1) that has been recently published.
 
 ```{r, echo=FALSE}
 eqarchive <- read.csv("eqarchive-en.csv", header = TRUE)
@@ -66,15 +69,15 @@ DataDict<-data.frame(
   Variables=colnames(eqarchive), 
   Example=sapply(eqarchive, function(x) paste(as.character(head(unique(x),1)), collapse = ", ")),
   Meanings=c("The exactly time that earthquakes occur.",
-            "The location of a point north or south of the equator.Latitude is shown on a map or globe as east-west lines parallel to the equator.",
-            "The location of a point east or west of the prime meridian.Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.",
-            "The value given is the depth below the surface of the mean spheroid. It shows the point of initial rupture within Earth",
-            "Magnitude is a measure of the amount of energy released during an earthquake.",
-            "Distinct magnitude scales base on the type of the earthquakes and the differences of data collection.",
-            "The locations where earthquakes happened.",
-            "continued for place",
-            "continued for place"
-            )
+             "The location of a point north or south of the equator.Latitude is shown on a map or globe as east-west lines parallel to the equator.",
+             "The location of a point east or west of the prime meridian.Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.",
+             "The value given is the depth below the surface of the mean spheroid. It shows the point of initial rupture within Earth",
+             "Magnitude is a measure of the amount of energy released during an earthquake.",
+             "Distinct magnitude scales base on the type of the earthquakes and the differences of data collection.",
+             "The locations where earthquakes happened.",
+             "continued for place",
+             "continued for place"
+  )
 )
 DataDict%>%remove_rownames() %>%
   kable(booktabs = TRUE, caption = "Data Dictionary") %>%
@@ -103,7 +106,7 @@ Negative magnitude is not an error, because magnitude calculations are based on 
 
 # Exploratory Analysis
 
-```{r}
+```{r, eval=FALSE}
 fig <- eqarchive%>%plot_ly( 
   lat = ~latitude,
   lon = ~longitude,
@@ -114,12 +117,14 @@ fig <- eqarchive%>%plot_ly(
       style = 'open-street-map',
       zoom =2.5,
       center = list(lon = -88, lat = 34))) 
+```
 
-fig
+```{r, echo=FALSE, fig.align='center', fig.cap = "Earthquake Location in Canada"}
+knitr::include_graphics("./Figures/fig.png")
 ```
 
 We have plotted the locations of earthquakes on the map, and it is evident that there is a substantial amount of data. Earthquakes primarily occur in regions of Canada that are in proximity to the United States and Greenland.
-British Columbia, New Brunswick, and Yukon experience earthquakes more frequently than other provinces. British Columbia and Yukon are located on the Pacific Plate boundary, where the Pacific Plate is subducting beneath the North American Plate. This subduction can lead to significant seismic activity. New Brunswick is near the St. Lawrence rift system, which is associated with fault lines and seismic activity.
+British Columbia, New Brunswick, and Yukon experience earthquakes more frequently than other provinces. British Columbia and Yukon are located on the Pacific Plate boundary, where the Pacific Plate is subducting beneath the North American Plate. This subduction can lead to significant seismic activity. New Brunswick is near the St. Lawrence rift system, which is also associated with fault lines and seismic activity.
 
 ```{r}
 eqarchive%>%mutate(date=as.POSIXct(date, format = "%Y-%m-%d"))%>%ggplot(aes(x = date, y = magnitude)) +
@@ -189,7 +194,7 @@ plot_ly(data = frequency, x = ~year, y = ~count, type = "scatter", mode = "lines
   layout(title = "Number of Earthquakes with Magnitude 4.5 or Above",
          xaxis = list(title = "Year"),
          yaxis = list(title = "Number of Earthquakes")
-         )
+  )
 ```
 
 To assess the forecasting accuracy of the ARIMA model for earthquake events, we processed the original data into a monthly data from 1985 January to 2019 December. Subsequently, we computed the count of earthquakes with a magnitude greater than 4 for each month and year, resulting in a corresponding time series and we utilized the data from the first 32 years as the training set, reserving the data from the subsequent 3 years as the testing set.
@@ -313,13 +318,45 @@ lines(eq_ts_pred,col="red")
 
 # Better Model for Counts
 
-From the previous analysis we have found that the ARIMA model did not yield a good prediction. One obvious flaw was that the predicted number of earthquake per month wasn't integer. We therefore introduce another model proposed by [@PQX].
+From the previous analysis we have found that the ARIMA model did not yield a good prediction. One obvious flaw was that the predicted number of earthquake per month wasn't an integer. We therefore introduce another model proposed by [@PQX].
+The authors have demonstrated a new approach to model the counts of earthquakes, in which an innovation distribution was obtained by mixing Poision distribution with quasi-xgamma distribution [@PQX].
+
+We first gave a very brief introduction of this INARPQX(1) process proposed by the researchers. We say that a random variable $\lambda$ has a Quasi-Xgamma distribution if its distribution function is of the form:
+
+$$
+f(\lambda; \alpha, \theta) = \frac{\theta}{2*(1+\alpha)}*(2\alpha+\theta^2x^2)e^{-\theta x}, ~ x>0;~ \alpha, \theta>0
+$$
+Assuming that a random variable X has the Poison distribution with the parameter $\lambda$ that is quasi-xgamma distributed, then the mixture distribution of X is called a $PQX(\alpha, \theta)$ with the form:
+
+$$
+P(X=x)=\frac{2\alpha\theta(\theta+1)^2 + \theta^3(x+1)(x+2)}{2(\alpha+1)(\theta+1)^{x+3}}, ~x=0,1,2...
+$$
+Finally, if a sequence of random variables $\{\epsilon_t; t\in \mathbb{N}\}$ is independent and identically PQX distributed, then the authors have defined a new innovation process $\{X_t; t\in \mathbb{N}\}$ called INARPQX(1) as:
+
+$$
+X_t=\sum_{i=1}^{X_{t-1}}Z_i + \epsilon_t
+$$
+where $Z_i$ are iid Bernoulli random variables with probability p. As we have seen from the previous section, an AR(1) model is enough to describe the process, hence the INARPQX(1). 
+
+In this model we have to estimate three parameters: $p$, $\alpha$ and $\theta$. The authors have proposed several ways of estimating the parameters, including the EM algorithm, the numerical estimation of MLE, and the Yule-Walker estimators. We have found that these methods have their pros and cons, but all of them tend to poorly estimate the $\alpha$ parameter. We have made a simple simulated sequence of the INARPQX(1) process with the true parameters $\alpha=0.35$, $\theta=0.15$, $p=0.3$, and used the Yule-Walker method to do the estimation.
+
+```{r, fig.cap="Simulated INARPQX(1) Process with Yule-Walker Estimates"}
+set.seed(1)
+SimData<-Sim_INARPQX$new(size=1000, nboot=1,plotMSE=FALSE)
+ggplot(data.frame(t=1:1000, X=SimData$BootData), aes(x=t,y=X))+geom_line()
+```
+
+As one can see from Figure() above, the estimations for $\theta$ and $p$ are fairly accurate, however not for $\alpha$. More detailed comparison between the methods of estimation was discussed in the original paper [@PQX]. In there researchers have suggested using the numerical approximation of the MLE. We were able to show this by using the non-parametric bootstrap method to simulate estimates and take the mean of the sample estimates. One can see in Figure() below that the mean squared error of the estimated MLE of the $\alpha$ parameter decreases significantly below 0.02 for about 2000 simulation iterations. In the paper[@PQX] one can find that the Yule-Walker estimation yields higher MSE than MLE method. Hence we used numerical approximation to estimate our MLE.
+
+```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process MSE with MLE Approximation", out.height="3in", out.width="5in"}
+knitr::include_graphics("./Figures/Simulation.png")
+```
 
 ```{r}
 data<-eqarchive%>%mutate(YM=paste0(year(date), "-", month(date), "-1"))%>%
   mutate(YM=as.POSIXct(YM))%>%filter(magnitude>=4)%>%group_by(YM)%>%summarise(n=n())
 
-(ests<-MLE(data=data$n, p=c(0.04,0.02,0.3))$estimate)
+ests<-MLE(data=data$n, p=c(0.04,0.02,0.3))$estimate
 
 EqCount_pred<-rep(data$n[1], length(data$n))
 for (i in 2:length(data$n)) {
@@ -329,15 +366,23 @@ for (i in 2:length(data$n)) {
 pqxplot<-data.frame(Time=data$YM, EqCount=data$n, EqCount_pred)%>%gather(key = "Type",value = "value", EqCount:EqCount_pred)%>%
   plot_ly(x=~Time, y=~value, color = ~Type, type="scatter", mode="lines",
           line=list(color=~c(EqCount="black", EqCount_pred="red")[Type]))%>%
-  layout(paper_bgcolor="lightgrey", plot_bgcolor="lightgrey")
+  layout(paper_bgcolor="lightgrey", plot_bgcolor="lightgrey",
+         xaxis=list(title=list(text="Time", font=axisfont),tickfont=axisfont),
+         yaxis=list(title=list(text="Monthly Counts", font=axisfont),tickfont=axisfont),
+         legend=list(font=axisfont))
 
 saveWidget(widget = pqxplot, file = "./Figures/pqxplot.html")
 shots<-webshot(url = "./Figures/pqxplot.html", file = "./Figures/pqxplot.png", delay = 1, zoom = 2)
 ```
 
-```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process Prediction", out.height="3in", out.width="3in"}
+```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process Prediction", out.height="3in", out.width="10in"}
 knitr::include_graphics("./Figures/pqxplot.png")
 ```
 
+We saw that this INARPQX(1) model gave a better estimation of the counts of earthquakes than the ARMA model did.
+
+# Conclusion
+
+We have seen that the seismic activities in Canada are mostly located in the coast area where the earth plates are meeting. Especially, we saw large earthquakes with magnitude greater than 4.5 were located in the West coast and the number of these earthquakes have been increasing during the past decades. However, from a large time scale we did not observe any seasonal or trend pattern in the time series of the number of earthquakes in Canada. On the other hand, predicting the location of the earthquake is difficult due to our lack of professional and deep understanding of the earthquake mechanism, as well as relevant data. Therefore instead of predicting the location of destructive earthquakes, we took a different approach to predict the monthly counts of earthquakes. This was doable since we observed that the counts followed an AR(1) process. We were able to conclude that the new INARPQX(1) model did better estimation of the counts of earthquakes than an ordinary AR(1) model could do. Such new model can be used to predict the occurrence. However due to the complex nature of earthquakes, we still thought that the model alone could not be used to make accurate predictions without further extensive researches. Our project was thus only able to make a rough estimation of the counts data, rather than to emphasize the power of prediction of the model.
 
 # References{.allowframebreaks}

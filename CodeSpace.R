@@ -46,14 +46,14 @@ MLE<-function(data, p){
 
 Sim_INARPQX<-setRefClass(
   "BootClass",
-  fields = list(size="numeric",nboot="numeric",BootData="matrix",estimates="matrix", MSE="list",plotMSE="logical", initialp="ANY"),
+  fields = list(nboot="numeric",BootData="matrix",estimates="matrix", MSE="list",plotMSE="logical",size="ANY", initialp="ANY"),
   methods=list(
     initialize=function(nboot, plotMSE,size=NULL, initialp=NULL){
       if(!is.null(size)){.self$size<-size}else{stop("Must have the size of the sample specified.")}
       
       if(plotMSE==TRUE){
         if(!is.null(initialp) & class(initialp)=="numeric"){.self$initialp<-initialp}else{.self$initialp<-NULL}
-        .self$MSE<-.self$SimulateMSE(.self$size, nboot, .self$initialp)}
+        .self$MSE<-.self$SimulateMSE(size=.self$size, nboot=nboot, initialp=.self$initialp)}
       else{
         .self$BootData<-.self$TakeSample(.self$size, nboot)
         .self$estimates<-.self$YWcalculator(BootData)}
@@ -76,7 +76,7 @@ Sim_INARPQX<-setRefClass(
     
     YWcalculator=function(NewData){
       res<-apply(NewData,2, function(x) YW(data=x))
-      cat("YW Parameter estimates: ", rowMeans(res), "\n")
+      cat("YW Parameter estimates: ", "\n", c("alpha", "theta", "p"), "\n", rowMeans(res), "\n")
       return(res)
     },
     
@@ -104,12 +104,17 @@ Sim_INARPQX<-setRefClass(
       })
       
       mse<-map(ests, function(df){
-        df%>%transmute(alphaMSE=(alpha_est-0.35)^2, theta_MSE=(theta_est-0.15)^2, n)%>%colMeans()
+        df%>%transmute(alpha_MSE=(alpha_est-0.35)^2, theta_MSE=(theta_est-0.15)^2, n)%>%colMeans()
       })
       
+      axisfont<-list(size=30)
       do.call(rbind, mse)%>%data.frame()%>%
         gather("param", "value", 1:2)%>%
-        plot_ly(x=~n, y=~value, color = ~param, type = "scatter", mode="lines")%>%print()
+        plot_ly(x=~n, y=~value, color = ~param, type = "scatter", mode="lines")%>%
+        layout(xaxis=list(title=list(text="Sample Size", font=axisfont),tickfont=axisfont),
+               yaxis=list(title=list(text="MSE Value", font=axisfont),tickfont=axisfont),
+               legend=list(font=axisfont)
+               )%>%print()
       return(mse)
     }
   )
