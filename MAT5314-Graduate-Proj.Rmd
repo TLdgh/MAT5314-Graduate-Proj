@@ -41,7 +41,7 @@ Earthquakes are difficult to predict for three main reasons. Firstly, plate boun
 
 Frequent historical earthquakes give us a huge data set that can be used to study earthquake causes, correlations, space-time, and further earthquake prediction. Current researches have provided several statistical models to analyze the earthquake processes. Trigger model, a special case of the Neyman-Scott clustering model, can be used to estimate aftershocks after a major earthquake [@Cite1]. Epidemic-Type Aftershocks Sequence (ETAS) model is also widely used to forecast earthquake occurrences [@Cite2]. In addition, time series analysis can be done to explore cycles related to earthquake frequency and it is also effective in predicting large earthquakes [@Cite3]. There are also several techniques from machine learning that provide us alternative ways other than conventional statistical models to analyze the earthquake data. For example, deep learning can be used to predict seismic events, including intensity and location [@Cite4]. Clustering model can identify regions with high-frequency earthquakes to upgrade building structures to reduce damage from impending earthquakes.
 
-We focus on a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze the data to give a detailed review of this natural disaster in the country and make some inference about its characteristics. In particular, we want to check if there's any location-wise pattern in earthquake occurrence and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as time. Finally we want to apply some probabilistic models that have been extensively studies by other researchers to the data in order to assess the likelihood of future occurrence in high-risk area.
+We focus on a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze the data to give a detailed review of this natural disaster in the country and make some inference about its characteristics. In particular, we want to check if there's any location-wise pattern in earthquake occurrence and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as seasonality. Finally we want to apply some probabilistic model that have been extensively studies by other researchers to the data in order to assess the counts of future occurrence.
 
 # Method
 First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Lastly, we will try to estimate the monthly counts of earthquakes with a new model called INARPQX(1) that has been recently published.
@@ -50,25 +50,25 @@ First, we will demonstrate some aspects of the earthquake occurrence by visualiz
 eqarchive <- read.csv("eqarchive-en.csv", header = TRUE)
 ```
 
-data dictionary: (https://earthquakescanada.nrcan.gc.ca/info-gen/glossa-en.php)
+From the following glossary we have found the definitons of our data variables: (https://earthquakescanada.nrcan.gc.ca/info-gen/glossa-en.php)
 
-latitude: The location of a point north or south of the equator. Latitude is shown on a map or globe as east-west lines parallel to the equator.  
+- Latitude: The location of a point north or south of the equator. Latitude is shown on a map or globe as east-west lines parallel to the equator.  
 
-longitude: The location of a point east or west of the prime meridian. Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.  
+- Longitude: The location of a point east or west of the prime meridian. Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.  
 
-depth: The value given is the depth below the surface of the mean spheroid.  
+- Depth: The value given is the depth below the surface of the mean spheroid.  
 
-magnitude: Magnitude is a measure of the amount of energy released during an earthquake. It may be expressed using the Richter scale.  
+- Magnitude: Magnitude is a measure of the amount of energy released during an earthquake. It may be expressed using the Richter scale.  
 
-1. $M_{L}$ means local magnitude, which is the magnitude defined by Charles Richter for California. However, due to the different attenuation methods of seismic waves in Eastern North America, Otto Nuttli defined a magnitude formula more suitable for Eastern North America, called Magnitude Nuttli, which is $m_{N}$. There exists some other scales of magnitude, but the magnitude of the moment scale ($M_{W}$ or $M$) is the most common way to describe earthquakes. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
-
-2. Negative magnitude is not an error, because magnitude calculations are based on a logarithmic scale. 10 times drop in amplitude decreases the magnitude by 1. Hence magnitude -1 is 10 time less than magnitude 0. Negative magnitude represents small earthquake which are not felt by human. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+We gathered all relevant information into a formal data definition:
 
 ```{r, echo=FALSE}
 DataDict<-data.frame(
   Variables=colnames(eqarchive), 
   Example=sapply(eqarchive, function(x) paste(as.character(head(unique(x),1)), collapse = ", ")),
-  Meanings=c("The exactly time that earthquakes occur.",
+  Number.Unique=sapply(eqarchive, function(x) length(unique(x))),
+  PctMissing=sapply(eqarchive, function(x) paste0(round(sum(is.na(x))/length(x), 4)*100,"%" ) ),
+  Comment=c("The exactly time that earthquakes occur.",
              "The location of a point north or south of the equator.Latitude is shown on a map or globe as east-west lines parallel to the equator.",
              "The location of a point east or west of the prime meridian.Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.",
              "The value given is the depth below the surface of the mean spheroid. It shows the point of initial rupture within Earth",
@@ -96,13 +96,11 @@ cat("*Group by magnitude type:\n")
 table(eqarchive$magnitude.type)
 ```
 
-$M_{L}$ means local magnitude, which is the magnitude defined by Charles Richter for California. However, due to the different attenuation methods of seismic waves in Eastern North America, Otto Nuttli defined a magnitude formula more suitable for Eastern North America, called Magnitude Nuttli, which is $m_{N}$. There exists some other scales of magnitude, but the magnitude of the moment scale ($M_{W}$ or $M$) is the most common way to describe earthquakes. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
+1. $M_{L}$ means local magnitude, which is the magnitude defined by Charles Richter for California. However, due to the different attenuation methods of seismic waves in Eastern North America, Otto Nuttli defined a magnitude formula more suitable for Eastern North America, called Magnitude Nuttli, which is $m_{N}$. There exists some other scales of magnitude, but the magnitude of the moment scale ($M_{W}$ or $M$) is the most common way to describe earthquakes. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
 
-The main benefit of Mw is that the magnitude is directly tied to earthquake source processes that do not saturate. Body wave magnitudes ($m_{b}$) and surface magnitudes ($M_{s}$) do not correctly reflect the size of large earthquakes due to saturating at large magnitudes.
+The main benefit of $M_W$ is that the magnitude is directly tied to earthquake source processes that do not saturate. Body wave magnitudes ($m_{b}$) and surface magnitudes ($M_{s}$) do not correctly reflect the size of large earthquakes due to saturating at large magnitudes.
 
-Negative magnitude is not an error, because magnitude calculations are based on a logarithmic scale. 10 times drop in amplitude decreases the magnitude by 1. For example, magnitude -1 is 10 time less than magnitude 0. Negative magnitude represents small earthquake which are not felt by human. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
-
-
+2. Negative magnitude is not an error, because magnitude calculations are based on a logarithmic scale. 10 times drop in amplitude decreases the magnitude by 1. Hence magnitude -1 is 10 time less than magnitude 0. Negative magnitude represents small earthquake which are not felt by human. (https://earthquakescanada.nrcan.gc.ca/info-gen/faq-en.php#ml_and_mn)
 
 # Exploratory Analysis
 
