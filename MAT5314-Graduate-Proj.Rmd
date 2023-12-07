@@ -41,7 +41,7 @@ Earthquakes are difficult to predict for three main reasons. Firstly, plate boun
 
 Frequent historical earthquakes give us a huge data set that can be used to study earthquake causes, correlations, space-time, and further earthquake prediction. Current researches have provided several statistical models to analyze the earthquake processes. Trigger model, a special case of the Neyman-Scott clustering model, can be used to estimate aftershocks after a major earthquake [@Cite1]. Epidemic-Type Aftershocks Sequence (ETAS) model is also widely used to forecast earthquake occurrences [@Cite2]. In addition, time series analysis can be done to explore cycles related to earthquake frequency and it is also effective in predicting large earthquakes [@Cite3]. There are also several techniques from machine learning that provide us alternative ways other than conventional statistical models to analyze the earthquake data. For example, deep learning can be used to predict seismic events, including intensity and location [@Cite4]. Clustering model can identify regions with high-frequency earthquakes to upgrade building structures to reduce damage from impending earthquakes.
 
-We focus on a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at https://open.canada.ca/data/en/dataset/4cedd37e-0023-41fe-8eff-bea45385e469. In this project we want to analyze the data to give a detailed review of this natural disaster in the country and make some inference about its characteristics. In particular, we want to check if there's any location-wise pattern in earthquake occurrence and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as seasonality. Finally we want to apply some probabilistic model that have been extensively studies by other researchers to the data in order to assess the counts of future occurrence.
+We focus on a data set of earthquake occurrence in Canada provided by the Government of Canada. The data set is located at [@Data]. In this project we want to analyze the data to give a detailed review of this natural disaster in the country and make some inference about its characteristics. In particular, we want to check if there's any location-wise pattern in earthquake occurrence and how frequent it can happen. Then we want to analyze if the occurrence of earthquake is also correlated to some other variables such as seasonality. Finally we want to apply some probabilistic model that have been extensively studies by other researchers to the data in order to assess the counts of future occurrence.
 
 # Method
 First, we will demonstrate some aspects of the earthquake occurrence by visualizing the seismic data. Map charts and other related plots will be used to perform such initial analysis. Then we will use time series analysis to study whether there exist temporal trends, seasonal patterns, and certain frequency in seismic events. Lastly, we will try to estimate the monthly counts of earthquakes with a new model called INARPQX(1) that has been recently published.
@@ -50,29 +50,19 @@ First, we will demonstrate some aspects of the earthquake occurrence by visualiz
 eqarchive <- read.csv("eqarchive-en.csv", header = TRUE)
 ```
 
-From the following glossary we have found the definitons of our data variables: (https://earthquakescanada.nrcan.gc.ca/info-gen/glossa-en.php)
-
-- Latitude: The location of a point north or south of the equator. Latitude is shown on a map or globe as east-west lines parallel to the equator.  
-
-- Longitude: The location of a point east or west of the prime meridian. Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.  
-
-- Depth: The value given is the depth below the surface of the mean spheroid.  
-
-- Magnitude: Magnitude is a measure of the amount of energy released during an earthquake. It may be expressed using the Richter scale.  
-
-We gathered all relevant information into a formal data definition:
+We first gathered all relevant information into a formal data definition:
 
 ```{r, echo=FALSE}
 DataDict<-data.frame(
   Variables=colnames(eqarchive), 
-  Example=sapply(eqarchive, function(x) paste(as.character(head(unique(x),1)), collapse = ", ")),
+  Example=sapply(eqarchive, function(x) paste(as.character(head(unique(x),3)), collapse = ", ")),
   Number.Unique=sapply(eqarchive, function(x) length(unique(x))),
   PctMissing=sapply(eqarchive, function(x) paste0(round(sum(is.na(x))/length(x), 4)*100,"%" ) ),
   Comment=c("The exactly time that earthquakes occur.",
              "The location of a point north or south of the equator.Latitude is shown on a map or globe as east-west lines parallel to the equator.",
              "The location of a point east or west of the prime meridian.Longitude is shown on a map or globe as north-south lines left and right of the prime meridian, which passes through Greenwich, England.",
              "The value given is the depth below the surface of the mean spheroid. It shows the point of initial rupture within Earth",
-             "Magnitude is a measure of the amount of energy released during an earthquake.",
+             "Magnitude is a measure of the amount of energy released during an earthquake. It may be expressed using the Richter scale.",
              "Distinct magnitude scales base on the type of the earthquakes and the differences of data collection.",
              "The locations where earthquakes happened.",
              "continued for place",
@@ -82,7 +72,7 @@ DataDict<-data.frame(
 DataDict%>%remove_rownames() %>%
   kable(booktabs = TRUE, caption = "Data Dictionary") %>%
   kable_styling(font_size = 11, latex_options = c("striped", "scale_down", "hold_position")) %>%
-  column_spec(3, width = "40em") %>%
+  column_spec(5, width = "20em") %>%
   row_spec(0, bold = TRUE)
 ```
 
@@ -134,10 +124,6 @@ The magnitude of earthquakes is usually divided into seven main categories, whic
 6. "Major Earthquake": The magnitude is greater than 7 and less than or equal to 8. This type of earthquake may cause surface rupture and widespread seismic wave propagation.
 7. "Massive Earthquake": The magnitude is greater than 8 or higher. Such earthquakes usually result in significant crustal displacement and seismic wave propagation, posing a significant threat to the surrounding area.
 
-We calculated the number of earthquakes occurring in each of these seven different earthquake magnitude categories separately. We found that between 1985 and 2019, "Moderate Earthquake" occurred 828 times ; "Strong Earthquake" had 36 recorded occurrences; "Major Earthquake" occurred only three times, and "Massive Earthquake" never occurred during this 35-year period. The cumulative number of earthquakes in these categories showed a significant difference compared to the other three categories. This suggested that most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
-
-\vspace{20pt}
-
 ```{r}
 #Dividing the magnitude into 7 levels 
 breaks <- c(-Inf, 1, 3, 4.5, 6, 7, 8, Inf)
@@ -151,18 +137,20 @@ magnitude_level_df <- data.frame(
 # Print the table using kable
 kable(magnitude_level_df, format = "markdown", 
       caption = "Earthquake Magnitude Levels") %>%
-  kable_styling(full_width = FALSE)
+  kable_styling(full_width = FALSE, latex_options = c("striped", "scale_down", "hold_position"))
 ```
 
+We calculated the number of earthquakes occurring in each of these seven different earthquake magnitude categories separately. We found from Table 2 that between 1985 and 2019, "Moderate Earthquake" occurred 828 times ; "Strong Earthquake" had 36 recorded occurrences; "Major Earthquake" occurred only three times, and "Massive Earthquake" never occurred during this 35-year period. The cumulative number of earthquakes in these categories showed a significant difference compared to the other three categories. This suggested that most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
+
 \begin{minipage}[t]{0.65\textwidth}
-```{r, fig.align='center', fig.cap = "Pie Chart of Magnitude levels", out.height="4in", out.width="4in"}
-#Calculating the percentages for different earthquake magnitude's levels
-percentages <- (magnitude_level_df$Earthquake_Count / sum(magnitude_level_df$Earthquake_Count))*100
+```{r,fig.align='center', fig.cap = "Pie Chart of Magnitude levels", out.height="2in", out.width="3in"}
+percentages <- round((magnitude_level_df$Earthquake_Count / sum(magnitude_level_df$Earthquake_Count))*100, 2)
 A <- as.data.frame(percentages)
 
 #Draw the pie chart of the percentage
 piechart <- plot_ly(A, labels=~magnitude_level_df$Magnitude_Range, values=~percentages, type="pie")%>% 
-  layout(title = list(text="Pie Chart of Magnitude levels", font=list(size=12)),
+  layout(margin=list(l=60, r=0, b=0, t=20),
+         title = list(text="Pie Chart of Magnitude levels", font=list(size=12)),
          xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
          legend = list(title = list(text="Magnitude levels"), font=list(size=10))
@@ -171,15 +159,12 @@ piechart
 ```
 \end{minipage}
 \begin{minipage}[t]{0.35\textwidth}
-
-In order to compare the relative proportions of the number of earthquakes occurring in each earthquake magnitude category corresponding to the overall number of earthquakes more visually, we plotted the pie chart. As can be seen in Figure(2), 73 percentage of earthquake's magnitude $M \in (1, 3]$, which was "Minor Earthquake". This was the highest ratio for these seven earthquake magnitude categories and it accounted for almost three quarters of the total earthquakes happened between 1985 and 2019 year. The proportion of earthquakes whose magnitude $M \in (3, 4.5]$ was a little greater than the earthquakes whose magnitude $M \in (-\infty, 1]$. 
+In order to compare the relative proportions of the number of earthquakes occurring in each earthquake magnitude category corresponding to the overall number of earthquakes more visually, we plotted the pie chart. As can be seen in Figure(2), 73 percentage of earthquake's magnitude $M \in (1, 3]$, which was "Minor Earthquake". This was the highest ratio for these seven earthquake magnitude categories and it accounted for almost three quarters of the total earthquakes happened between 1985 and 2019 year. 
 \end{minipage}
-These two types of earthquakes accounted for 25 percentage of the total and the remaining four categories of large earthquakes accounted for less than 1 percentage of the total. Although these earthquakes were the most destructive, most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
 
-\vspace{15pt}
+The proportion of earthquakes whose magnitude $M \in (3, 4.5]$ was a little greater than the earthquakes whose magnitude $M \in (-\infty, 1]$. These two types of earthquakes accounted for 25 percentage of the total and the remaining four categories of large earthquakes accounted for less than 1 percentage of the total. Although these earthquakes were the most destructive, most earthquakes occurred in these decades did not cause much damage to people, buildings, or the ground.
 
 \begin{minipage}[t]{0.43\textwidth}
-
 We have separately calculated the number of earthquakes with a magnitude $M \in [4.5, \infty)$ that occurred each year and plotted a time series graph. From 1985 to 1999, there was a slow decrease followed by an increase in the number of earthquakes. However, the annual earthquake count remained around 1500 on average and did not exceed 2000. Starting from the year 2000, we observed a significant upward trend in the occurrence of earthquakes with a magnitude of 4.5 or higher, reaching its peak in 2010 with 5409 events. From 2011 to 2019, although there were noticeable fluctuations in the annual earthquake count, it consistently remained above 3000 and did not drop below 3253, indicating a relatively high frequency.
 \end{minipage}
 \begin{minipage}[t]{0.5\textwidth}
@@ -285,8 +270,8 @@ Before establishing an appropriate model, it was essential to conduct a stationa
 adf_result <- adf.test(adjusted_eq)
 print(paste("ADF Test P-value:", adf_result$p.value))
 ```
-\begin{minipage}[t]{0.65\textwidth}
-```{r, fig.align='center', fig.cap = "ACF and PACF Plot", out.width='4in', out.height='4in'}
+\begin{minipage}[t]{0.75\textwidth}
+```{r, fig.align='center', fig.cap = "ACF and PACF Plot", out.width='4in', out.height='2in'}
 par(mfrow=c(1, 2))
 
 #ACF and PACF plot
@@ -294,15 +279,13 @@ acf(adjusted_eq)
 pacf(adjusted_eq)
 ```
 \end{minipage}
-\begin{minipage}[t]{0.35\textwidth}
-\vspace{8pt}
-Generally, we determined the values of p and q in an ARMA model by observing the ACF and PACF plots. Figures(6) represented the ACF and PACF plots. It could be observed that the ACF was relatively high for the first two lags, surpassing the threshold line (blue line), and then gradually decreased. Thus, we inferred that the ACF was exhibiting a tailing pattern. On the other hand, the PACF cut off after lag 1 and subsequent PACF for all lags remained within the threshold line (blue line), indicating a truncated PACF. Consequently, we opted for an AR(1) model.
+\begin{minipage}[t]{0.25\textwidth}
+Generally, we determined the values of p and q in an ARMA model by observing the ACF and PACF plots. Figures(6) represented the ACF and PACF plots. It could be observed that the ACF was relatively high for the first two lags, surpassing the threshold line (blue line), and then gradually decreased. Thus, we inferred that the ACF was exhibiting a tailing pattern. 
 \end{minipage}
-
+On the other hand, the PACF cut off after lag 1 and subsequent PACF for all lags remained within the threshold line (blue line), indicating a truncated PACF. Consequently, we opted for an AR(1) model.
 
 \begin{minipage}[t]{0.35\textwidth}
 If a model was appropriate, the residuals should follow a normal distribution with a mean of 0, and for any lag order, the autocorrelation of residuals should be 0. In other words, the residuals of the model should exhibited independent and normally distributed behavior.
-\vspace{10pt}
 
 We generated a QQ plot for the residuals of the AR(1) model. As depicted in Figure(7), the points on the QQ plot roughly aligned with a straight line, suggesting that the residuals approximately followed a normal distribution.
 \end{minipage}
@@ -383,19 +366,19 @@ One can see in Figure(11) that the mean squared error of the estimated MLE of th
 
 :::::: {.cols data-latex=""}
 
-::: {.col data-latex="{0.45\textwidth}"}
-```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process MSE with MLE Approximation", out.height="3in", out.width="6in"}
+::: {.col data-latex="{0.49\textwidth}"}
+```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process MSE with MLE Approximation", out.height="2in", out.width="6in"}
 knitr::include_graphics("./Figures/Simulation.png")
 ```
 :::
 
-::: {.col data-latex="{0.1\textwidth}"}
+::: {.col data-latex="{0.02\textwidth}"}
 \ 
 <!-- an empty Div (with a white space), serving as
 a column separator -->
 :::
 
-::: {.col data-latex="{0.45\textwidth}"}
+::: {.col data-latex="{0.49\textwidth}"}
 ```{r}
 data<-eqarchive%>%mutate(YM=paste0(year(date), "-", month(date), "-1"))%>%
   mutate(YM=as.POSIXct(YM))%>%filter(magnitude>=4)%>%group_by(YM)%>%summarise(n=n())
@@ -419,7 +402,7 @@ saveWidget(widget = pqxplot, file = "./Figures/pqxplot.html")
 shots<-webshot(url = "./Figures/pqxplot.html", file = "./Figures/pqxplot.png", delay = 1, zoom = 2)
 ```
 
-```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process Prediction", out.height="4in", out.width="3.5in"}
+```{r, echo=FALSE, fig.align='center', fig.cap = "INARPQX(1) Process Prediction", out.height="3in", out.width="3.5in"}
 knitr::include_graphics("./Figures/pqxplot.png")
 ```
 :::
